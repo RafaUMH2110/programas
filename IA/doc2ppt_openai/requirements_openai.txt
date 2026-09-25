@@ -1,0 +1,15 @@
+# Dependencias necesarias para la variante OpenAI:
+#   generate_presentation_vscode_openai.py
+#   generate_presentation_cli_openai.py
+#
+# Instalación:
+#   pip install -r requirements_openai.txt
+
+python-pptx>=0.6.23
+python-docx>=1.1.0
+openai>=1.30.0
+
+# Opcional (solo para generate_presentation_vscode_openai.py, permite
+# cargar OPENAI_API_KEY desde un archivo .env en lugar de una variable
+# de entorno del sistema):
+python-dotenv>=1.0.0

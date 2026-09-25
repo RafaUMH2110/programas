@@ -1,0 +1,16 @@
+# Dependencias del generador de ConSultar
+#
+# PyYAML   -> lectura de config.yaml (no forma parte de la librería estándar
+#             de Python). Si prefieres no instalarla, usa un config.json
+#             equivalente: el generador detecta el formato por la extensión.
+# Jinja2   -> motor de plantillas usado para generar el HTML/CSS/JS de la
+#             aplicación de forma mantenible, en lugar de concatenar cadenas
+#             de texto a mano.
+#
+# Ambas son necesarias para el funcionamiento normal del generador
+# (config.yaml + templates/*.j2). Si algún día se sustituyera config.yaml
+# por config.json y las plantillas por f-strings, podrían eliminarse, pero
+# no es la forma de uso recomendada de este proyecto.
+
+PyYAML>=6.0
+Jinja2>=3.1

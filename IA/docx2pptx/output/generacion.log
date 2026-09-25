@@ -1,0 +1,73 @@
+20:16:13 | INFO     | ======================================================================
+20:16:13 | INFO     | Iniciando generación de presentación a partir de: ./entrada/documento.docx
+20:16:13 | INFO     | Extracción completada: 154 bloques de contenido detectados.
+20:16:13 | INFO     | Modo de planificación seleccionado: Claude (claude-sonnet-5)
+20:16:13 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 1/4)...
+20:16:14 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011CcdgsGwUwKSmxLHscfTvY'}
+20:16:16 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 2/4)...
+20:16:16 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011CcdgsSsXkmRnB3oSgaf9S'}
+20:16:18 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 3/4)...
+20:16:18 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011CcdgscQGPW9Qxosf8YCt7'}
+20:16:20 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 4/4)...
+20:16:20 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011CcdgsmzE9UbAE6kbTJQGY'}
+20:16:22 | WARNING  | Falló la planificación con la API de Anthropic (No se pudo obtener un guion de diapositivas válido de la API de Anthropic tras 4 intentos. Último error: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011CcdgsmzE9UbAE6kbTJQGY'}). Se usará el planificador local como respaldo.
+20:16:22 | INFO     | Generando guion de diapositivas de forma local (sin API).
+20:16:22 | INFO     | Presentación guardada correctamente en: /Users/rafa/Programas/IA/docx2pptx/output/presentacion_generada.pptx
+20:23:30 | INFO     | ======================================================================
+20:23:30 | INFO     | Iniciando generación de presentación a partir de: ./entrada/documento.docx
+20:23:30 | INFO     | Extracción completada: 154 bloques de contenido detectados.
+20:23:30 | INFO     | Modo de planificación seleccionado: Claude (claude-sonnet-5)
+20:23:30 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 1/4)...
+20:23:31 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011CcdhRWH4AuSQwJMFQ7KHG'}
+20:23:33 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 2/4)...
+20:23:33 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011CcdhRgQWbAw8VU75Ubv9s'}
+20:23:35 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 3/4)...
+20:23:35 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011CcdhRqzUJY4mUtReqpf95'}
+20:23:37 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 4/4)...
+20:23:38 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011CcdhS1uGo5EKb8e2G818k'}
+20:23:40 | WARNING  | Falló la planificación con la API de Anthropic (No se pudo obtener un guion de diapositivas válido de la API de Anthropic tras 4 intentos. Último error: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011CcdhS1uGo5EKb8e2G818k'}). Se usará el planificador local como respaldo.
+20:23:40 | INFO     | Generando guion de diapositivas de forma local (sin API).
+20:23:40 | INFO     | Presentación guardada correctamente en: /Users/rafa/Programas/IA/docx2pptx/output/presentacion_generada.pptx
+20:29:11 | INFO     | ======================================================================
+20:29:11 | INFO     | Iniciando generación de presentación a partir de: ./entrada/documento.docx
+20:29:11 | INFO     | Extracción completada: 154 bloques de contenido detectados.
+20:29:11 | ERROR    | Error inesperado
+Traceback (most recent call last):
+  File "/Users/rafa/Programas/IA/docx2pptx/generar_presentacion_v0.py", line 1402, in main
+    ruta_generada = generar_presentacion(DOCX_INPUT_PATH, CONFIG_PATH)
+  File "/Users/rafa/Programas/IA/docx2pptx/generar_presentacion_v0.py", line 1366, in generar_presentacion
+    planificador, modo = _obtener_planificador(config, logger)
+                         ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/rafa/Programas/IA/docx2pptx/generar_presentacion_v0.py", line 1309, in _obtener_planificador
+    clave_api = os.environ.get(ANTHROPIC_API_KEY, "").strip()
+                               ^^^^^^^^^^^^^^^^^
+NameError: name 'ANTHROPIC_API_KEY' is not defined
+20:31:55 | INFO     | ======================================================================
+20:31:55 | INFO     | Iniciando generación de presentación a partir de: ./entrada/documento.docx
+20:31:55 | INFO     | Extracción completada: 154 bloques de contenido detectados.
+20:31:55 | INFO     | Modo de planificación seleccionado: Claude (claude-sonnet-5)
+20:31:55 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 1/4)...
+20:31:55 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011Ccdi4hFe8P92jF782sxjM'}
+20:31:57 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 2/4)...
+20:31:58 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011Ccdi4sGtwJAGUWNUKjuqK'}
+20:32:00 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 3/4)...
+20:32:00 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011Ccdi52yYcg6xZNEcKgvo5'}
+20:32:02 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 4/4)...
+20:32:02 | WARNING  | La API de Anthropic devolvió un error (código 400): Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011Ccdi5CaFMegKwwzHTfuhK'}
+20:32:04 | WARNING  | Falló la planificación con la API de Anthropic (No se pudo obtener un guion de diapositivas válido de la API de Anthropic tras 4 intentos. Último error: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': '`temperature` is deprecated for this model.'}, 'request_id': 'req_011Ccdi5CaFMegKwwzHTfuhK'}). Se usará el planificador local como respaldo.
+20:32:04 | INFO     | Generando guion de diapositivas de forma local (sin API).
+20:32:04 | INFO     | Presentación guardada correctamente en: /Users/rafa/Programas/IA/docx2pptx/output/presentacion_generada.pptx
+20:41:26 | INFO     | ======================================================================
+20:41:26 | INFO     | Iniciando generación de presentación a partir de: ./entrada/documento.docx
+20:41:26 | INFO     | Extracción completada: 154 bloques de contenido detectados.
+20:41:26 | INFO     | Modo de planificación seleccionado: Claude (claude-sonnet-5)
+20:41:26 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 1/4)...
+20:42:05 | INFO     | Guion recibido de Claude: 19 diapositivas planificadas.
+20:42:06 | INFO     | Presentación guardada correctamente en: /Users/rafa/Programas/IA/docx2pptx/output/presentacion_generada.pptx
+14:57:06 | INFO     | ======================================================================
+14:57:06 | INFO     | Iniciando generación de presentación a partir de: ./entrada/documento.docx
+14:57:06 | INFO     | Extracción completada: 154 bloques de contenido detectados.
+14:57:06 | INFO     | Modo de planificación seleccionado: Claude (claude-sonnet-5)
+14:57:06 | INFO     | Llamando a la API de Anthropic (modelo=claude-sonnet-5, intento 1/4)...
+14:57:42 | INFO     | Guion recibido de Claude: 18 diapositivas planificadas.
+14:57:42 | INFO     | Presentación guardada correctamente en: /Users/rafa/Programas/IA/docx2pptx/output/presentacion_generada.pptx

@@ -1,0 +1,16 @@
+{
+    "input": "documentos/manual.md",
+    "output": "salida/manual.docx",
+    "tema": "neutral",
+    "ancho": 1400,
+    "alto": 900,
+    "escala": 2.0,
+    "fondo": "white",
+    "idioma": "es-ES",
+    "tamano_pagina": "A4",
+    "margen_cm": 2.5,
+    "plantilla_referencia": null,
+    "mantener_temporales": false,
+    "sin_sandbox": false,
+    "verbose": true
+}

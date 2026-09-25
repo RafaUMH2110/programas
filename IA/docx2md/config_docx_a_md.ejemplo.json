@@ -1,0 +1,9 @@
+{
+    "input": "ejemplo/entrada_ejemplo.docx",
+    "output": "salida/documento.md",
+    "images_dir": "salida/imagenes",
+    "umbral_mermaid": 0.5,
+    "usar_ia": true,
+    "mantener_temporales": false,
+    "verbose": true
+}

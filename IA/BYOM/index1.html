@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxy IA Privado (BYOM)</title>
+    <!-- Librería para generar PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-bottom: 20px; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; color: #555; }
+        select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; font-family: inherit; }
+        select { background: white; }
+        textarea { resize: vertical; }
+        .btn-group { margin-top: 15px; display: flex; gap: 10px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        button.secondary { background: #6c757d; }
+        button.secondary:hover { background: #545b62; }
+        #result { margin-top: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; min-height: 100px; white-space: pre-wrap; line-height: 1.5; }
+        .loading { display: none; color: #666; margin-top: 10px; font-style: italic; }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Proxy IA Privado (BYOM)</h1>
+        
+        <label for="provider">Proveedor:</label>
+        <select id="provider" onchange="updateModels()">
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="openai">OpenAI (GPT)</option>
+            <option value="gemini">Google Gemini</option>
+        </select>
+
+        <label for="model">Modelo:</label>
+        <select id="model">
+            <!-- Se llena dinámicamente -->
+        </select>
+
+        <label for="system_prompt">System Prompt (Rol):</label>
+        <textarea id="system_prompt" rows="3">Eres un asistente experto en ingeniería y control de sistemas. Responde con precisión técnica.</textarea>
+
+        <label for="user_input">Consulta:</label>
+        <textarea id="user_input" rows="5" placeholder="Escribe tu pregunta o instrucción aquí..."></textarea>
+
+        <button id="sendBtn" onclick="enviarConsulta()">Generar Respuesta</button>
+        <div id="loading" class="loading">Procesando... (esto puede tardar unos segundos)</div>
+        
+        <div id="result">Esperando input...</div>
+        
+        <div id="exportActions" class="btn-group" style="display: none;">
+            <button class="secondary" onclick="exportarPDF()">📄 Exportar PDF</button>
+            <button class="secondary" onclick="exportarJSON()">📋 Exportar JSON</button>
+        </div>
+        
+        <div id="status" style="margin-top: 10px; font-size: 0.9em;"></div>
+    </div>
+
+    <script>
+        // Configuración de modelos disponibles
+        const models = {
+            anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-opus-20240229', 'claude-3-haiku-20240307'],
+            openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
+            gemini: ['gemini-1.5-pro', 'gemini-1.5-flash']
+        };
+
+        let ultimoResultado = null;
+
+        function updateModels() {
+            const provider = document.getElementById('provider').value;
+            const modelSelect = document.getElementById('model');
+            modelSelect.innerHTML = '';
+            models[provider].forEach(m => {
+                const option = document.createElement('option');
+                option.value = m;
+                option.textContent = m;
+                modelSelect.appendChild(option);
+            });
+        }
+
+        async function enviarConsulta() {
+            const provider = document.getElementById('provider').value;
+            const model = document.getElementById('model').value;
+            const systemPrompt = document.getElementById('system_prompt').value;
+            const userInput = document.getElementById('user_input').value;
+            
+            if (!userInput.trim()) { 
+                alert("Por favor, introduce una consulta."); 
+                return; 
+            }
+
+            const sendBtn = document.getElementById('sendBtn');
+            const loading = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            const exportActions = document.getElementById('exportActions');
+            const status = document.getElementById('status');
+            
+            sendBtn.disabled = true;
+            loading.style.display = 'block';
+            resultDiv.innerHTML = '';
+            exportActions.style.display = 'none';
+            status.innerHTML = '';
+            ultimoResultado = null;
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider, model, system_prompt: systemPrompt, user_input: userInput })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = data.result;
+                    ultimoResultado = {
+                        timestamp: new Date().toISOString(),
+                        provider: provider,
+                        model: model,
+                        prompt: userInput,
+                        response: data.result
+                    };
+                    exportActions.style.display = 'flex';
+                    status.innerHTML = '<span class="success">✓ Respuesta generada correctamente</span>';
+                } else {
+                    resultDiv.innerHTML = `<span class="error">Error: ${data.error || 'Desconocido'}</span>`;
+                    status.innerHTML = '<span class="error">✗ Fallo en la generación</span>';
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">Error de conexión: ${err.message}</span>`;
+                status.innerHTML = '<span class="error">✗ Error de red</span>';
+            } finally {
+                sendBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function exportarPDF() {
+            if (!ultimoResultado) {
+                alert("No hay resultado para exportar.");
+                return;
+            }
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Encabezado
+                doc.setFontSize(18);
+                doc.setTextColor(40, 40, 40);
+                doc.text("Informe de Consulta IA", 14, 15);
+                
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Fecha: ${new Date().toLocaleString()}`, 14, 22);
+                doc.text(`Proveedor: ${ultimoResultado.provider.toUpperCase()}`, 14, 27);
+                doc.text(`Modelo: ${ultimoResultado.model}`, 14, 32);
+                
+                // Separador
+                doc.setLineWidth(0.5);
+                doc.line(14, 36, 196, 36);
+                
+                // Prompt del usuario
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text("Consulta del usuario:", 14, 42);
+                
+                doc.setFontSize(9);
+                const promptLines = doc.splitTextToText(ultimoResultado.prompt, 180);
+                doc.text(promptLines, 14, 48);
+                
+                // Respuesta
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text("Respuesta generada:", 14, 48 + (promptLines.length * 4) + 10);
+                
+                doc.setFontSize(9);
+                const responseLines = doc.splitTextToText(ultimoResultado.response, 180);
+                doc.text(responseLines, 14, 56 + (promptLines.length * 4) + 10);
+                
+                doc.save(`consulta_ia_${Date.now()}.pdf`);
+                alert("PDF generado correctamente.");
+            } catch (e) {
+                alert("Error al generar PDF: " + e.message);
+            }
+        }
+
+        function exportarJSON() {
+            if (!ultimoResultado) {
+                alert("No hay resultado para exportar.");
+                return;
+            }
+            
+            try {
+                const jsonStr = JSON.stringify(ultimoResultado, null, 2);
+                const blob = new Blob([jsonStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `consulta_ia_${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert("JSON generado y descargado correctamente.");
+            } catch (e) {
+                alert("Error al generar JSON: " + e.message);
+            }
+        }
+
+        // Cargar modelos iniciales
+        updateModels();
+    </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "style": {
+    "colors": {
+      "ink": "141414",
+      "panel": "201F1C",
+      "gold": "C6A15B",
+      "gold_deep": "9C7B3D",
+      "white": "FFFFFF",
+      "off_light": "F7F5F2",
+      "card_alt": "EAE4D8",
+      "gray": "6B655D",
+      "gray_light": "A79F92",
+      "line": "E4DFD6",
+      "green": "3F7D4F",
+      "amber": "C48A1C",
+      "red": "B33A3A"
+    },
+    "fonts": {
+      "serif_titles": "Cambria",
+      "sans_body": "Calibri",
+      "monospace_code": "Courier New"
+    },
+    "dimensions": {
+      "slide_width_in": 13.333,
+      "slide_height_in": 7.5,
+      "margin_in": 0.6
+    },
+    "footer_label": "PRESENTACIÓN GENERADA AUTOMÁTICAMENTE"
+  },
+  "anthropic": {
+    "use_api": true,
+    "model": "claude-sonnet-5",
+    "max_tokens": 8000,
+    "max_retries": 4,
+    "retry_base_delay_seconds": 2.0,
+    "enable_sampling_params": false,
+    "temperature": 0.4
+  },
+  "output": {
+    "output_dir": "./output",
+    "filename": "presentacion_generada.pptx"
+  },
+  "logging": {
+    "level": "INFO",
+    "log_file": "./output/generacion.log"
+  }
+}

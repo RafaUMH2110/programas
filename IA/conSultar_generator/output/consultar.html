@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ConSultar — Mejora y ejecuta tus consultas mediante IA</title>
+<meta name="description" content="ConSultar mejora automáticamente tu consulta y la envía a la IA de Anthropic para obtener una respuesta completa en Markdown." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232E6DA4'/%3E%3Cpath d='M9 20 L16 9 L23 20' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='24' r='1.6' fill='white'/%3E%3C/svg%3E" />
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.0/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@9.0.3/build/index.umd.js"></script>
+
+<style>
+:root {
+  --color-bg: #F4F9FC;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #EAF3FB;
+  --color-border: #D8E6F1;
+  --color-border-strong: #D8E6F1;
+
+  --color-primary: #2E6DA4;
+  --color-primary-hover: #24567F;
+  --color-primary-soft: #DCEBF7;
+  --color-primary-contrast: #FFFFFF;
+
+  --color-text: #1E2A38;
+  --color-text-muted: #57708A;
+  --color-text-faint: #57708A;
+
+  --color-success-bg: #E7F5EC;
+  --color-success-text: #206A44;
+  --color-error-bg: #FCEAEA;
+  --color-error-text: #9A2C24;
+  --color-warning-bg: #FEF6E4;
+  --color-warning-text: #7A5B12;
+
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --radius-lg: 14px;
+  --radius-md: calc(14px * 0.7);
+  --radius-sm: calc(14px * 0.4);
+
+  --shadow-card: 0 1px 2px rgba(30, 64, 102, 0.06), 0 8px 24px rgba(30, 64, 102, 0.05);
+  --max-width: 980px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: auto;
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  z-index: 1000;
+}
+.skip-link:focus { left: 16px; top: 16px; }
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 2px;
+}
+
+.app-shell {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 20px 64px;
+}
+
+header.app-header {
+  background: linear-gradient(180deg, var(--color-surface-alt) 0%, var(--color-bg) 100%);
+  border-bottom: 1px solid var(--color-border);
+  padding: 40px 20px 32px;
+  margin-bottom: 32px;
+}
+
+.app-header-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-logo { flex: 0 0 auto; width: 48px; height: 48px; }
+
+.app-header-text h1 {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.app-header-text p {
+  margin: 4px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.98rem;
+  max-width: 52ch;
+}
+
+section.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+section.card > h2 { margin: 0 0 4px; font-size: 1.15rem; font-weight: 600; }
+section.card > p.card-subtitle { margin: 0 0 20px; color: var(--color-text-muted); font-size: 0.92rem; }
+
+.field { margin-bottom: 18px; }
+.field:last-child { margin-bottom: 0; }
+
+.field > label, .field > legend {
+  display: block;
+  font-weight: 600;
+  font-size: 0.93rem;
+  margin-bottom: 6px;
+  color: var(--color-text);
+}
+
+.field .hint { display: block; font-size: 0.82rem; color: var(--color-text-muted); margin-top: 6px; }
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.97rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:hover, select:hover, textarea:hover { border-color: var(--color-primary); }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
+textarea#consulta-input { min-height: 140px; }
+
+.field-invalid { border-color: var(--color-error-text) !important; }
+.error-text { display: block; color: var(--color-error-text); font-size: 0.85rem; margin-top: 6px; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 560px) { .field-row { grid-template-columns: 1fr; } }
+
+.checkbox-field { display: flex; align-items: flex-start; gap: 10px; }
+.checkbox-field input[type="checkbox"] {
+  width: 20px; height: 20px; margin-top: 2px;
+  accent-color: var(--color-primary); flex: 0 0 auto;
+}
+.checkbox-field label { font-weight: 600; font-size: 0.95rem; cursor: pointer; }
+
+.export-subfields {
+  margin-top: 16px; padding: 16px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.export-subfields[hidden] { display: none; }
+
+.api-key-field { position: relative; }
+.api-key-field input { padding-right: 84px; }
+.toggle-visibility-btn {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: transparent; border: none; color: var(--color-primary);
+  font-size: 0.82rem; font-weight: 600; padding: 6px 8px; cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.toggle-visibility-btn:hover { background: var(--color-primary-soft); }
+
+.notice {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--color-warning-bg); color: var(--color-warning-text);
+  border: 1px solid #F0DDAE; border-radius: var(--radius-md);
+  padding: 12px 14px; font-size: 0.85rem; margin-top: 10px;
+}
+.notice svg { flex: 0 0 auto; margin-top: 1px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: inherit; font-size: 0.97rem; font-weight: 600;
+  padding: 12px 22px; border-radius: var(--radius-md); border: 1px solid transparent;
+  cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+.btn-primary { background: var(--color-primary); color: var(--color-primary-contrast); }
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-hover); }
+.btn-primary:disabled { background: #B7CBDA; cursor: not-allowed; }
+
+.btn-secondary { background: var(--color-surface); color: var(--color-primary); border-color: var(--color-primary); }
+.btn-secondary:hover:not(:disabled) { background: var(--color-primary-soft); }
+.btn-secondary:disabled { color: var(--color-text-faint); border-color: var(--color-border-strong); cursor: not-allowed; }
+
+.btn-row { display: flex; justify-content: flex-end; margin-top: 20px; }
+
+.spinner {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.4); border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
+#status-area { margin-top: 16px; min-height: 0; }
+.status-message { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--radius-md); font-size: 0.9rem; line-height: 1.4; }
+.status-message svg { flex: 0 0 auto; margin-top: 2px; }
+.status-info { background: var(--color-primary-soft); color: var(--color-primary-hover); }
+.status-error { background: var(--color-error-bg); color: var(--color-error-text); }
+.status-success { background: var(--color-success-bg); color: var(--color-success-text); }
+
+#resultado-placeholder { color: var(--color-text-faint); font-size: 0.95rem; padding: 12px 0; }
+#resultado-contenido { font-size: 0.98rem; color: var(--color-text); overflow-wrap: anywhere; }
+#resultado-contenido[hidden] { display: none; }
+
+#resultado-contenido h1, #resultado-contenido h2, #resultado-contenido h3, #resultado-contenido h4 { line-height: 1.3; margin: 1.3em 0 0.5em; }
+#resultado-contenido h1:first-child, #resultado-contenido h2:first-child, #resultado-contenido h3:first-child { margin-top: 0; }
+#resultado-contenido p { margin: 0 0 1em; }
+#resultado-contenido ul, #resultado-contenido ol { margin: 0 0 1em; padding-left: 1.4em; }
+#resultado-contenido li { margin-bottom: 0.35em; }
+#resultado-contenido a { color: var(--color-primary); }
+
+#resultado-contenido blockquote {
+  margin: 0 0 1em; padding: 4px 16px; border-left: 3px solid var(--color-primary);
+  background: var(--color-surface-alt); color: var(--color-text-muted);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+#resultado-contenido code { font-family: var(--font-mono); background: var(--color-surface-alt); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.88em; }
+#resultado-contenido pre { background: #F2F6FA; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 14px 16px; overflow-x: auto; margin: 0 0 1em; }
+#resultado-contenido pre code { background: none; padding: 0; font-size: 0.87em; }
+
+#resultado-contenido table { border-collapse: collapse; width: 100%; margin: 0 0 1em; font-size: 0.92rem; }
+#resultado-contenido th, #resultado-contenido td { border: 1px solid var(--color-border); padding: 8px 10px; text-align: left; }
+#resultado-contenido th { background: var(--color-surface-alt); }
+#resultado-contenido hr { border: none; border-top: 1px solid var(--color-border); margin: 1.4em 0; }
+
+.export-hint { display: block; margin-top: 10px; font-size: 0.85rem; color: var(--color-text-muted); text-align: right; }
+
+footer.app-footer {
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px;
+  max-width: var(--max-width); margin: 0 auto;
+  color: var(--color-text-faint); font-size: 0.8rem; padding: 24px 20px 8px;
+}
+footer.app-footer a { color: var(--color-text-muted); text-decoration: underline; }
+footer.app-footer a:hover { color: var(--color-primary); }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}</style>
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Saltar al contenido principal</a>
+
+<header class="app-header">
+  <div class="app-header-inner">
+    <svg class="app-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="48" height="48" rx="13" fill="#2E6DA4"/>
+      <path d="M13 30 L24 14 L35 30" stroke="#FFFFFF" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="24" cy="36" r="2.3" fill="#FFFFFF"/>
+    </svg>
+    <div class="app-header-text">
+      <h1>ConSultar</h1>
+      <p>Mejora automáticamente tu consulta y obtén una respuesta completa, generada en dos pasos con la IA de Anthropic.</p>
+    </div>
+  </div>
+</header>
+
+<div class="app-shell" id="main-content">
+
+  <!-- ============================== CONFIGURACIÓN ============================== -->
+  <section class="card" aria-labelledby="config-titulo">
+    <h2 id="config-titulo">Configuración</h2>
+    <p class="card-subtitle">Elige el modelo y ajusta los parámetros de la consulta.</p>
+
+    <div class="field api-key-field">
+      <label for="api-key-input">Clave de API de Anthropic</label>
+      <input type="password" id="api-key-input" name="api-key" autocomplete="off"
+             placeholder="sk-ant-..." aria-describedby="api-key-hint" />
+      <button type="button" class="toggle-visibility-btn" id="toggle-api-key-btn"
+              aria-pressed="false" aria-controls="api-key-input">Mostrar</button>
+      <span class="hint" id="api-key-hint">Tu clave se usa únicamente en este navegador para conectar directamente con la API de Anthropic. No se guarda ni se envía a ningún otro servidor.</span>
+      <div class="notice" role="note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>La llamada se realiza directamente desde tu navegador a la API de Anthropic. Por motivos de seguridad, esta forma de uso solo es recomendable para pruebas personales, nunca para una aplicación pública con usuarios distintos de ti.</span>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="modelo-select">Elegir Modelo</label>
+        <select id="modelo-select" name="modelo"></select>
+        <span class="hint" id="modelo-hint"></span>
+      </div>
+
+      <div class="field">
+        <label for="tokens-input">Número de tokens</label>
+        <input type="number" id="tokens-input" name="tokens" value="4096" min="1" step="1" aria-describedby="tokens-hint" />
+        <span class="hint" id="tokens-hint"></span>
+      </div>
+    </div>
+
+    <div class="field checkbox-field">
+      <input type="checkbox" id="exportar-checkbox" name="exportar" />
+      <label for="exportar-checkbox">Exportar resultado</label>
+    </div>
+
+    <div class="export-subfields" id="export-subfields" hidden>
+      <div class="field-row">
+        <div class="field">
+          <label for="formato-select">Formato de exportación</label>
+          <select id="formato-select" name="formato">
+            <option value="markdown" selected>Markdown</option>
+            <option value="word">Word</option>
+            <option value="pdf">PDF</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="nombre-archivo-input">Nombre del archivo</label>
+          <input type="text" id="nombre-archivo-input" name="nombre-archivo" value="resultado" aria-describedby="nombre-archivo-hint" />
+          <span class="hint" id="nombre-archivo-hint">La extensión se añade automáticamente según el formato elegido.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================ CONSULTA ================================= -->
+  <section class="card" aria-labelledby="consulta-titulo">
+    <h2 id="consulta-titulo">Consulta</h2>
+    <p class="card-subtitle">Tu consulta se mejora primero automáticamente y después se envía como pregunta final.</p>
+
+    <div class="field">
+      <label for="rol-input">Rol del usuario</label>
+      <textarea id="rol-input" name="rol" aria-describedby="rol-hint">Eres un asistente de inteligencia artificial experto y minucioso. Responde a la solicitud del usuario de manera completa y estructurada, utilizando formato Markdown (encabezados, listas, bloques de código, etc.) cuando sea apropiado.</textarea>
+      <span class="hint" id="rol-hint">Instrucciones de sistema para la respuesta final (puedes editarlas libremente).</span>
+    </div>
+
+    <div class="field">
+      <label for="consulta-input">Consulta</label>
+      <textarea id="consulta-input" name="consulta" placeholder="Escribe aquí tu consulta, con el detalle que necesites…" aria-describedby="consulta-hint"></textarea>
+      <span class="hint" id="consulta-hint">Este texto se mejora automáticamente antes de enviarse como pregunta final.</span>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn btn-primary" id="consultar-btn">
+        <span id="consultar-btn-text">Consultar</span>
+      </button>
+    </div>
+
+    <div id="status-area" role="status" aria-live="polite"></div>
+  </section>
+
+  <!-- =============================== RESULTADO ================================= -->
+  <section class="card" aria-labelledby="resultado-titulo">
+    <h2 id="resultado-titulo">Resultado</h2>
+    <p class="card-subtitle">La respuesta final aparecerá aquí, en formato Markdown.</p>
+
+    <p id="resultado-placeholder">Todavía no se ha generado ninguna respuesta. Escribe tu consulta y pulsa «Consultar».</p>
+    <div id="resultado-contenido" hidden></div>
+
+    <div class="btn-row">
+      <button type="button" class="btn btn-secondary" id="exportar-btn" disabled>Exportar fichero</button>
+    </div>
+    <span class="export-hint" id="exportar-hint">Activa «Exportar resultado» en la configuración para habilitar la exportación.</span>
+  </section>
+
+</div>
+
+<footer class="app-footer">
+  <span>Rafael Puerto (<a href="mailto:r.puerto@umh.es">r.puerto@umh.es</a>)</span>
+  <span id="fecha-modificacion-footer"></span>
+</footer>
+
+<script>
+'use strict';
+
+/* =========================================================================
+ * CONSULTAR — lógica de la aplicación (generada automáticamente)
+ *
+ * Este archivo se genera a partir de templates/app.js.j2 y de la
+ * configuración en config.yaml. La lógica de negocio (flujo de dos pasos,
+ * parseo de Markdown, exportación) es fija; los valores marcados con
+ * comentarios "// [config]" provienen directamente de la configuración.
+ *
+ * Organización:
+ *   1. Configuración inyectada (modelos, prompts, mensajes, exportación, API)
+ *   2. Estado de la aplicación
+ *   3. initializeApp()
+ *   4. Utilidades de validación y estado/errores en la interfaz
+ *   5. Comunicación con la API (con reintentos y tiempo máximo de espera)
+ *   6. Flujo de dos pasos (mejora + consulta final)
+ *   7. Renderizado del resultado (Markdown -> HTML)
+ *   8. Exportación (Markdown / Word / PDF)
+ *   9. Arranque
+ * ========================================================================= */
+
+/* ------------------------------------------------------------------ *
+ * 1. CONFIGURACIÓN INYECTADA DESDE config.yaml
+ * ------------------------------------------------------------------ */
+
+// [config] modelos.disponibles / modelos.modelo_por_defecto
+const MODELOS_DISPONIBLES = [{"id": "claude-sonnet-5", "nombre": "Claude Sonnet 5", "max_output_tokens": 128000, "notas": "Modelo de gama media más reciente. Mejor equilibrio entre velocidad, coste e inteligencia."}, {"id": "claude-haiku-4-5-20251001", "nombre": "Claude Haiku 4.5", "max_output_tokens": 64000, "notas": "Modelo más rápido y económico, con inteligencia cercana a la de los modelos de gama alta."}, {"id": "claude-sonnet-4-5-20250929", "nombre": "Claude Sonnet 4.5", "max_output_tokens": 64000, "notas": "Generación anterior a Sonnet 5."}, {"id": "claude-opus-4-5-20251101", "nombre": "Claude Opus 4.5", "max_output_tokens": 64000, "notas": "Modelo de gama alta."}, {"id": "claude-opus-4-1-20250805", "nombre": "Claude Opus 4.1 (legacy)", "max_output_tokens": 32000, "notas": "Modelo legacy, mantenido por compatibilidad."}];
+const MODELO_POR_DEFECTO_ID = "claude-sonnet-4-5-20250929";
+
+// [config] api.*
+const API = {"endpoint": "https://api.anthropic.com/v1/messages", "version": "2023-06-01", "timeoutMs": 60000, "reintentos": 2};
+
+// [config] prompts.mejora / prompts.final (con marcadores de posición tipo doble-llave, p. ej. "consulta")
+const PROMPTS = {"mejora": {"system": "You are an expert prompt engineer. Your only task is to take the user's original prompt (which may be written in any language) and rewrite it as a single, clear, detailed and unambiguous prompt in English, ready to be sent to an AI assistant. Do not answer the prompt yourself. Do not add explanations, preambles or comments. Reply with ONLY the improved prompt text, nothing else.", "user": "{{consulta}}", "maxTokens": 1024, "temperature": 0.3, "modelo": null}, "final": {"system": "{{rol_usuario}}", "user": "{{consulta_mejorada}}", "maxTokens": 4096, "temperature": null, "modelo": null}};
+
+// [config] ui.mensaje_* / ui.boton_consultar / ui.valor_por_defecto_rol
+const MENSAJES = {"paso1": "Paso 1 de 2: mejorando tu consulta…", "paso2": "Paso 2 de 2: generando la respuesta final…", "exito": "Respuesta generada correctamente.", "exportSinResultado": "Genera primero una respuesta para poder exportarla.", "exportCheckboxDesactivado": "Activa «Exportar resultado» en la configuración para habilitar la exportación.", "exportGenerado": "Archivo «{{nombre_archivo}}» descargado correctamente.", "botonConsultar": "Consultar"};
+
+// [config] exports.*
+const EXPORTS_CFG = {"markdownActivo": true, "wordActivo": true, "pdfActivo": true, "formatoPorDefecto": "markdown", "nombreArchivoPorDefecto": "resultado"};
+
+// [config] visibilidad.*
+const VISIBILIDAD = {"mostrarExportacion": true};
+
+
+/* ------------------------------------------------------------------ *
+ * Sustitución de marcadores de posición en las plantillas de prompt
+ * ------------------------------------------------------------------ */
+function rellenarPlantilla(plantilla, valores) {
+  return String(plantilla || '').replace(/\{\{\s*([a-zA-Z_]+)\s*\}\}/g, (coincidencia, clave) => {
+    return Object.prototype.hasOwnProperty.call(valores, clave) ? String(valores[clave]) : coincidencia;
+  });
+}
+
+
+/* ------------------------------------------------------------------ *
+ * 2. ESTADO DE LA APLICACIÓN
+ * ------------------------------------------------------------------ */
+const estado = {
+  procesando: false,
+  ultimoResultadoMarkdown: null
+};
+
+
+/* ------------------------------------------------------------------ *
+ * Referencias a elementos del DOM
+ * (los relacionados con la exportación pueden no existir si
+ * visibilidad.mostrar_exportacion es false: todo el código de más abajo
+ * comprueba su presencia antes de usarlos)
+ * ------------------------------------------------------------------ */
+const el = {
+  apiKeyInput: document.getElementById('api-key-input'),
+  toggleApiKeyBtn: document.getElementById('toggle-api-key-btn'),
+  modeloSelect: document.getElementById('modelo-select'),
+  modeloHint: document.getElementById('modelo-hint'),
+  tokensInput: document.getElementById('tokens-input'),
+  tokensHint: document.getElementById('tokens-hint'),
+  exportarCheckbox: document.getElementById('exportar-checkbox'),
+  exportSubfields: document.getElementById('export-subfields'),
+  formatoSelect: document.getElementById('formato-select'),
+  nombreArchivoInput: document.getElementById('nombre-archivo-input'),
+  rolInput: document.getElementById('rol-input'),
+  consultaInput: document.getElementById('consulta-input'),
+  consultarBtn: document.getElementById('consultar-btn'),
+  statusArea: document.getElementById('status-area'),
+  resultadoPlaceholder: document.getElementById('resultado-placeholder'),
+  resultadoContenido: document.getElementById('resultado-contenido'),
+  exportarBtn: document.getElementById('exportar-btn'),
+  exportarHint: document.getElementById('exportar-hint'),
+  fechaModificacionFooter: document.getElementById('fecha-modificacion-footer')
+};
+
+
+/* ------------------------------------------------------------------ *
+ * 3. initializeApp()
+ * ------------------------------------------------------------------ */
+function initializeApp() {
+  poblarSelectorDeModelos();
+  actualizarLimitesDeTokens();
+  if (VISIBILIDAD.mostrarExportacion) {
+    actualizarControlesDeExportacion();
+  }
+  mostrarFechaUltimaModificacion();
+
+  el.modeloSelect.addEventListener('change', actualizarLimitesDeTokens);
+  el.tokensInput.addEventListener('input', () => limpiarValidacion(el.tokensInput));
+  el.rolInput.addEventListener('input', () => limpiarValidacion(el.rolInput));
+  el.consultaInput.addEventListener('input', () => limpiarValidacion(el.consultaInput));
+  el.toggleApiKeyBtn.addEventListener('click', alternarVisibilidadClave);
+  el.consultarBtn.addEventListener('click', manejarClicConsultar);
+
+  if (VISIBILIDAD.mostrarExportacion && el.exportarCheckbox) {
+    el.exportarCheckbox.addEventListener('change', actualizarControlesDeExportacion);
+  }
+  if (el.exportarBtn) {
+    el.exportarBtn.addEventListener('click', manejarClicExportar);
+  }
+}
+
+// Muestra en el pie de página la fecha de la última modificación del propio
+// archivo HTML, tomada de `document.lastModified`: se actualiza sola cada
+// vez que el archivo se vuelve a generar/guardar, sin tocar el código.
+function mostrarFechaUltimaModificacion() {
+  if (!el.fechaModificacionFooter) return;
+  const fecha = new Date(document.lastModified);
+  if (Number.isNaN(fecha.getTime())) return;
+  const fechaFormateada = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }).format(fecha);
+  el.fechaModificacionFooter.textContent = `Última modificación: ${fechaFormateada}`;
+}
+
+function poblarSelectorDeModelos() {
+  el.modeloSelect.innerHTML = '';
+  MODELOS_DISPONIBLES.forEach(modelo => {
+    const opcion = document.createElement('option');
+    opcion.value = modelo.id;
+    opcion.textContent = modelo.nombre;
+    if (modelo.id === MODELO_POR_DEFECTO_ID) opcion.selected = true;
+    el.modeloSelect.appendChild(opcion);
+  });
+  if (!MODELOS_DISPONIBLES.some(m => m.id === MODELO_POR_DEFECTO_ID) && MODELOS_DISPONIBLES.length > 0) {
+    el.modeloSelect.selectedIndex = 0;
+  }
+}
+
+function alternarVisibilidadClave() {
+  const oculto = el.apiKeyInput.type === 'password';
+  el.apiKeyInput.type = oculto ? 'text' : 'password';
+  el.toggleApiKeyBtn.textContent = oculto ? "Ocultar" : "Mostrar";
+  el.toggleApiKeyBtn.setAttribute('aria-pressed', oculto ? 'true' : 'false');
+}
+
+
+/* ------------------------------------------------------------------ *
+ * 4. VALIDACIÓN Y MENSAJES DE ESTADO / ERROR
+ * ------------------------------------------------------------------ */
+
+function getModeloSeleccionado() {
+  const id = el.modeloSelect.value;
+  return MODELOS_DISPONIBLES.find(m => m.id === id) || MODELOS_DISPONIBLES[0];
+}
+
+function actualizarLimitesDeTokens() {
+  const modelo = getModeloSeleccionado();
+  el.tokensInput.max = String(modelo.max_output_tokens);
+  el.modeloHint.textContent = `Salida máxima admitida: ${modelo.max_output_tokens.toLocaleString('es-ES')} tokens.`;
+
+  const valorActual = parseInt(el.tokensInput.value, 10);
+  if (!Number.isNaN(valorActual) && valorActual > modelo.max_output_tokens) {
+    el.tokensInput.value = String(modelo.max_output_tokens);
+  }
+  el.tokensHint.textContent = `Debe ser un entero entre 1 y ${modelo.max_output_tokens.toLocaleString('es-ES')}.`;
+  limpiarValidacion(el.tokensInput);
+}
+
+function actualizarControlesDeExportacion() {
+  if (!el.exportarCheckbox || !el.exportSubfields) return;
+  el.exportSubfields.hidden = !el.exportarCheckbox.checked;
+  actualizarEstadoBotonExportar();
+}
+
+function marcarCampoInvalido(campo, mensaje) {
+  campo.classList.add('field-invalid');
+  campo.setAttribute('aria-invalid', 'true');
+  let errorEl = campo.parentElement.querySelector('.error-text');
+  if (!errorEl) {
+    errorEl = document.createElement('span');
+    errorEl.className = 'error-text';
+    campo.parentElement.appendChild(errorEl);
+  }
+  errorEl.textContent = mensaje;
+}
+
+function limpiarValidacion(campo) {
+  campo.classList.remove('field-invalid');
+  campo.removeAttribute('aria-invalid');
+  const errorEl = campo.parentElement.querySelector('.error-text');
+  if (errorEl) errorEl.remove();
+}
+
+function validateForm() {
+  let esValido = true;
+  const modelo = getModeloSeleccionado();
+
+  if (!el.apiKeyInput.value.trim()) {
+    marcarCampoInvalido(el.apiKeyInput, 'Introduce tu clave de API.');
+    esValido = false;
+  } else {
+    limpiarValidacion(el.apiKeyInput);
+  }
+
+  const tokens = parseInt(el.tokensInput.value, 10);
+  if (!Number.isInteger(tokens) || tokens < 1) {
+    marcarCampoInvalido(el.tokensInput, 'Introduce un número entero positivo de tokens.');
+    esValido = false;
+  } else if (tokens > modelo.max_output_tokens) {
+    marcarCampoInvalido(el.tokensInput, `El modelo «${modelo.nombre}» admite como máximo ${modelo.max_output_tokens.toLocaleString('es-ES')} tokens de salida.`);
+    esValido = false;
+  } else {
+    limpiarValidacion(el.tokensInput);
+  }
+
+  if (!el.rolInput.value.trim()) {
+    marcarCampoInvalido(el.rolInput, 'Describe el rol o las instrucciones de sistema para la respuesta final.');
+    esValido = false;
+  } else {
+    limpiarValidacion(el.rolInput);
+  }
+
+  if (!el.consultaInput.value.trim()) {
+    marcarCampoInvalido(el.consultaInput, 'Escribe tu consulta antes de continuar.');
+    esValido = false;
+  } else {
+    limpiarValidacion(el.consultaInput);
+  }
+
+  if (VISIBILIDAD.mostrarExportacion && el.exportarCheckbox && el.exportarCheckbox.checked && el.nombreArchivoInput && !el.nombreArchivoInput.value.trim()) {
+    marcarCampoInvalido(el.nombreArchivoInput, 'Indica un nombre de archivo para la exportación.');
+    esValido = false;
+  } else if (el.nombreArchivoInput) {
+    limpiarValidacion(el.nombreArchivoInput);
+  }
+
+  if (!esValido) {
+    showError('Revisa los campos marcados en rojo antes de continuar.');
+  }
+  return esValido;
+}
+
+function iconoInfoSvg() {
+  return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 11v5m0-8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+}
+function iconoErrorSvg() {
+  return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M15 9l-6 6m0-6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+}
+function iconoExitoSvg() {
+  return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+function showStatus(mensaje, tipo) {
+  tipo = tipo || 'info';
+  const claseTipo = tipo === 'error' ? 'status-error' : (tipo === 'success' ? 'status-success' : 'status-info');
+  const icono = tipo === 'error' ? iconoErrorSvg() : (tipo === 'success' ? iconoExitoSvg() : iconoInfoSvg());
+  el.statusArea.innerHTML = `<div class="status-message ${claseTipo}">${icono}<span>${escapeHtml(mensaje)}</span></div>`;
+}
+function showError(mensaje) { showStatus(mensaje, 'error'); }
+function limpiarEstado() { el.statusArea.innerHTML = ''; }
+
+function escapeHtml(texto) {
+  const div = document.createElement('div');
+  div.textContent = texto;
+  return div.innerHTML;
+}
+
+
+/* ------------------------------------------------------------------ *
+ * 5. COMUNICACIÓN CON LA API (con reintentos y tiempo máximo de espera)
+ * ------------------------------------------------------------------ */
+
+class ErrorApiClaude extends Error {
+  constructor(mensaje, reintentable) {
+    super(mensaje);
+    this.name = 'ErrorApiClaude';
+    this.reintentable = !!reintentable;
+  }
+}
+
+function esperar(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function llamarAClaude({ apiKey, modeloIdApi, maxTokens, temperature, systemPrompt, userPrompt }) {
+  const cuerpo = {
+    model: modeloIdApi,
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }]
+  };
+  if (temperature !== null && temperature !== undefined) {
+    cuerpo.temperature = temperature;
+  }
+
+  const intentosMaximos = 1 + Math.max(0, API.reintentos);
+  let ultimoError = null;
+
+  for (let intento = 1; intento <= intentosMaximos; intento++) {
+    const controlador = new AbortController();
+    const temporizador = setTimeout(() => controlador.abort(), API.timeoutMs);
+
+    try {
+      const respuesta = await fetch(API.endpoint, {
+        method: 'POST',
+        signal: controlador.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': API.version,
+          // Necesario para permitir llamadas directas desde el navegador.
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify(cuerpo)
+      });
+      clearTimeout(temporizador);
+
+      if (!respuesta.ok) {
+        let detalle = '';
+        try {
+          const cuerpoError = await respuesta.json();
+          detalle = (cuerpoError && cuerpoError.error && cuerpoError.error.message) || '';
+        } catch (e) { /* el cuerpo del error no era JSON válido; se ignora */ }
+
+        if (respuesta.status === 401) {
+          throw new ErrorApiClaude('Clave de API inválida o no autorizada. Comprueba que la has copiado correctamente.', false);
+        }
+        if (respuesta.status === 404) {
+          throw new ErrorApiClaude(`Modelo no encontrado (${detalle || 'comprueba que el identificador del modelo sigue vigente'}).`, false);
+        }
+        if (respuesta.status === 429) {
+          throw new ErrorApiClaude('Se ha superado el límite de peticiones a la API.', true);
+        }
+        if (respuesta.status >= 500) {
+          throw new ErrorApiClaude('La API de Anthropic no está disponible en este momento.', true);
+        }
+        throw new ErrorApiClaude(`La API ha devuelto un error (código ${respuesta.status})${detalle ? ': ' + detalle : '.'}`, false);
+      }
+
+      let datos;
+      try {
+        datos = await respuesta.json();
+      } catch (e) {
+        throw new ErrorApiClaude('La API ha devuelto una respuesta que no se pudo interpretar.', false);
+      }
+
+      const fragmentosTexto = (datos.content || [])
+        .filter(bloque => bloque.type === 'text')
+        .map(bloque => bloque.text);
+      const texto = fragmentosTexto.join('').trim();
+
+      if (!texto) {
+        throw new ErrorApiClaude('La respuesta generada está vacía.', false);
+      }
+      return texto;
+
+    } catch (error) {
+      clearTimeout(temporizador);
+
+      if (error && error.name === 'AbortError') {
+        ultimoError = new ErrorApiClaude(`La petición ha superado el tiempo máximo de espera (${API.timeoutMs / 1000} s).`, true);
+      } else if (error instanceof ErrorApiClaude) {
+        ultimoError = error;
+      } else {
+        ultimoError = new ErrorApiClaude('No se ha podido conectar con la API. Comprueba tu conexión a internet.', true);
+      }
+
+      const quedanIntentos = intento < intentosMaximos;
+      if (!ultimoError.reintentable || !quedanIntentos) {
+        throw ultimoError;
+      }
+      await esperar(400 * intento); // espera progresiva antes de reintentar
+    }
+  }
+  throw ultimoError;
+}
+
+
+/* ------------------------------------------------------------------ *
+ * 6. FLUJO DE DOS PASOS: MEJORA DEL PROMPT + CONSULTA FINAL
+ * ------------------------------------------------------------------ */
+
+async function improvePrompt({ apiKey, modeloIdApi, consultaOriginal }) {
+  const p = PROMPTS.mejora;
+  const valores = { consulta: consultaOriginal };
+  return llamarAClaude({
+    apiKey,
+    modeloIdApi: p.modelo || modeloIdApi,
+    maxTokens: p.maxTokens,
+    temperature: p.temperature,
+    systemPrompt: rellenarPlantilla(p.system, valores),
+    userPrompt: rellenarPlantilla(p.user, valores)
+  });
+}
+
+async function executeFinalQuery({ apiKey, modeloIdApi, maxTokens, rolUsuario, promptMejorado, modeloNombre }) {
+  const p = PROMPTS.final;
+  const valores = { consulta_mejorada: promptMejorado, rol_usuario: rolUsuario, modelo: modeloNombre };
+  return llamarAClaude({
+    apiKey,
+    modeloIdApi: p.modelo || modeloIdApi,
+    maxTokens,
+    temperature: p.temperature,
+    systemPrompt: rellenarPlantilla(p.system, valores),
+    userPrompt: rellenarPlantilla(p.user, valores)
+  });
+}
+
+async function manejarClicConsultar() {
+  if (estado.procesando) return;
+  limpiarEstado();
+  if (!validateForm()) return;
+
+  const apiKey = el.apiKeyInput.value.trim();
+  const modelo = getModeloSeleccionado();
+  const maxTokens = parseInt(el.tokensInput.value, 10);
+  const rolUsuario = el.rolInput.value.trim();
+  const consultaOriginal = el.consultaInput.value.trim();
+
+  ponerCargando(true, MENSAJES.paso1);
+
+  try {
+    const promptMejorado = await improvePrompt({ apiKey, modeloIdApi: modelo.id, consultaOriginal });
+
+    ponerCargando(true, MENSAJES.paso2);
+
+    const respuestaFinal = await executeFinalQuery({
+      apiKey, modeloIdApi: modelo.id, maxTokens, rolUsuario, promptMejorado, modeloNombre: modelo.nombre
+    });
+
+    renderResult(respuestaFinal);
+    showStatus(MENSAJES.exito, 'success');
+  } catch (error) {
+    showError(error && error.message ? error.message : 'Ha ocurrido un error inesperado al procesar la consulta.');
+  } finally {
+    ponerCargando(false);
+  }
+}
+
+function ponerCargando(activo, mensaje) {
+  estado.procesando = activo;
+  el.consultarBtn.disabled = activo;
+  el.consultarBtn.setAttribute('aria-busy', activo ? 'true' : 'false');
+
+  if (activo) {
+    el.consultarBtn.innerHTML = '<span class="spinner" aria-hidden="true"></span><span>' + escapeHtml(mensaje || 'Procesando…') + '</span>';
+    showStatus(mensaje || 'Procesando…', 'info');
+  } else {
+    el.consultarBtn.innerHTML = '<span id="consultar-btn-text">' + escapeHtml(MENSAJES.botonConsultar) + '</span>';
+  }
+}
+
+
+/* ------------------------------------------------------------------ *
+ * 7. RENDERIZADO DEL RESULTADO (Markdown -> HTML)
+ * ------------------------------------------------------------------ */
+
+function renderResult(markdownTexto) {
+  estado.ultimoResultadoMarkdown = markdownTexto;
+
+  try {
+    const html = marked.parse(markdownTexto);
+    const htmlSeguro = (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(html) : html;
+    el.resultadoContenido.innerHTML = htmlSeguro;
+  } catch (error) {
+    el.resultadoContenido.textContent = markdownTexto;
+  }
+
+  el.resultadoContenido.hidden = false;
+  el.resultadoPlaceholder.hidden = true;
+  if (VISIBILIDAD.mostrarExportacion) {
+    actualizarEstadoBotonExportar();
+  }
+}
+
+function actualizarEstadoBotonExportar() {
+  if (!el.exportarBtn) return;
+  const hayResultado = !!estado.ultimoResultadoMarkdown;
+  const exportarActivo = !!(el.exportarCheckbox && el.exportarCheckbox.checked);
+
+  el.exportarBtn.disabled = !(hayResultado && exportarActivo);
+
+  if (!el.exportarHint) return;
+  if (!exportarActivo) {
+    el.exportarHint.textContent = MENSAJES.exportCheckboxDesactivado;
+    el.exportarHint.style.display = '';
+  } else if (!hayResultado) {
+    el.exportarHint.textContent = MENSAJES.exportSinResultado;
+    el.exportarHint.style.display = '';
+  } else {
+    el.exportarHint.style.display = 'none';
+  }
+}
+
+
+/* ------------------------------------------------------------------ *
+ * 8. EXPORTACIÓN (Markdown / Word / PDF)
+ * ------------------------------------------------------------------ */
+
+function sanitizeFilenameBase(nombre) {
+  let base = (nombre || '').trim();
+  base = base.replace(/\.(md|markdown|docx|pdf)$/i, '');
+  base = base.replace(/[\\/:*?"<>|]+/g, '_');
+  base = base.replace(/\s+/g, ' ').trim();
+  if (!base) base = EXPORTS_CFG.nombreArchivoPorDefecto || 'resultado';
+  return base;
+}
+
+function construirNombreArchivo(nombreCrudo, formato) {
+  const extensiones = { markdown: '.md', word: '.docx', pdf: '.pdf' };
+  const extension = extensiones[formato] || '.md';
+  return sanitizeFilenameBase(nombreCrudo) + extension;
+}
+
+function descargarBlob(blob, nombreArchivo) {
+  const url = URL.createObjectURL(blob);
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = nombreArchivo;
+  document.body.appendChild(enlace);
+  enlace.click();
+  document.body.removeChild(enlace);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+async function manejarClicExportar() {
+  if (!estado.ultimoResultadoMarkdown) {
+    showError(MENSAJES.exportSinResultado);
+    return;
+  }
+  if (el.exportarCheckbox && !el.exportarCheckbox.checked) {
+    showError(MENSAJES.exportCheckboxDesactivado);
+    return;
+  }
+
+  const formato = el.formatoSelect ? el.formatoSelect.value : EXPORTS_CFG.formatoPorDefecto;
+  const nombreArchivo = construirNombreArchivo(el.nombreArchivoInput ? el.nombreArchivoInput.value : '', formato);
+
+  try {
+    if (formato === 'markdown') {
+      exportMarkdown(nombreArchivo);
+    } else if (formato === 'word') {
+      await exportWord(nombreArchivo);
+    } else if (formato === 'pdf') {
+      exportPDF(nombreArchivo);
+    }
+    showStatus(rellenarPlantilla(MENSAJES.exportGenerado, { nombre_archivo: nombreArchivo }), 'success');
+  } catch (error) {
+    showError('No se ha podido generar el archivo de exportación: ' + (error && error.message ? error.message : 'error desconocido.'));
+  }
+}
+
+function exportMarkdown(nombreArchivo) {
+  const blob = new Blob([estado.ultimoResultadoMarkdown], { type: 'text/markdown;charset=utf-8' });
+  descargarBlob(blob, nombreArchivo);
+}
+
+/* --------------------- Parser de Markdown a bloques --------------------- */
+function parseMarkdownBlocks(markdown) {
+  const lineas = (markdown || '').replace(/\r\n/g, '\n').split('\n');
+  const bloques = [];
+  let i = 0;
+
+  const esSeparadorTabla = (linea) => /^\s*\|?(\s*:?-{3,}:?\s*\|)+\s*:?-{3,}:?\s*\|?\s*$/.test(linea);
+  const dividirFilaTabla = (linea) => {
+    let l = linea.trim();
+    if (l.startsWith('|')) l = l.slice(1);
+    if (l.endsWith('|')) l = l.slice(0, -1);
+    return l.split('|').map(c => c.trim());
+  };
+
+  while (i < lineas.length) {
+    const linea = lineas[i];
+    if (linea.trim() === '') { i++; continue; }
+
+    if (/^\s*```/.test(linea)) {
+      const codigoLineas = [];
+      i++;
+      while (i < lineas.length && !/^\s*```/.test(lineas[i])) { codigoLineas.push(lineas[i]); i++; }
+      i++;
+      bloques.push({ tipo: 'code', texto: codigoLineas.join('\n') });
+      continue;
+    }
+    if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(linea)) { bloques.push({ tipo: 'hr' }); i++; continue; }
+
+    const coincidenciaEncabezado = linea.match(/^(#{1,6})\s+(.*)$/);
+    if (coincidenciaEncabezado) {
+      bloques.push({ tipo: 'heading', nivel: coincidenciaEncabezado[1].length, texto: coincidenciaEncabezado[2].trim() });
+      i++;
+      continue;
+    }
+
+    if (linea.includes('|') && i + 1 < lineas.length && esSeparadorTabla(lineas[i + 1])) {
+      const cabecera = dividirFilaTabla(linea);
+      i += 2;
+      const filas = [];
+      while (i < lineas.length && lineas[i].includes('|') && lineas[i].trim() !== '') { filas.push(dividirFilaTabla(lineas[i])); i++; }
+      bloques.push({ tipo: 'table', cabecera, filas });
+      continue;
+    }
+
+    if (/^\s*>\s?/.test(linea)) {
+      const citaLineas = [];
+      while (i < lineas.length && /^\s*>\s?/.test(lineas[i])) { citaLineas.push(lineas[i].replace(/^\s*>\s?/, '')); i++; }
+      bloques.push({ tipo: 'blockquote', texto: citaLineas.join(' ') });
+      continue;
+    }
+
+    if (/^\s*[-*+]\s+/.test(linea)) {
+      const items = [];
+      while (i < lineas.length && /^\s*[-*+]\s+/.test(lineas[i])) { items.push(lineas[i].replace(/^\s*[-*+]\s+/, '')); i++; }
+      bloques.push({ tipo: 'ul', items });
+      continue;
+    }
+
+    if (/^\s*\d+\.\s+/.test(linea)) {
+      const items = [];
+      while (i < lineas.length && /^\s*\d+\.\s+/.test(lineas[i])) { items.push(lineas[i].replace(/^\s*\d+\.\s+/, '')); i++; }
+      bloques.push({ tipo: 'ol', items });
+      continue;
+    }
+
+    const parrafoLineas = [];
+    while (i < lineas.length && lineas[i].trim() !== '' &&
+      !/^\s*```/.test(lineas[i]) && !/^(#{1,6})\s+/.test(lineas[i]) &&
+      !/^\s*>\s?/.test(lineas[i]) && !/^\s*[-*+]\s+/.test(lineas[i]) &&
+      !/^\s*\d+\.\s+/.test(lineas[i]) && !/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(lineas[i])) {
+      parrafoLineas.push(lineas[i]); i++;
+    }
+    bloques.push({ tipo: 'paragraph', texto: parrafoLineas.join(' ') });
+  }
+  return bloques;
+}
+
+function tokenizeInline(texto) {
+  const tokens = [];
+  const re = /(\*\*\*(.+?)\*\*\*)|(\*\*(.+?)\*\*)|(__(.+?)__)|(\*(.+?)\*)|(_(.+?)_)|(`(.+?)`)|(\[(.+?)\]\((.+?)\))/g;
+  let ultimoIndice = 0;
+  let coincidencia;
+  while ((coincidencia = re.exec(texto)) !== null) {
+    if (coincidencia.index > ultimoIndice) tokens.push({ tipo: 'text', texto: texto.slice(ultimoIndice, coincidencia.index) });
+    if (coincidencia[1] !== undefined) tokens.push({ tipo: 'boldItalic', texto: coincidencia[2] });
+    else if (coincidencia[3] !== undefined) tokens.push({ tipo: 'bold', texto: coincidencia[4] });
+    else if (coincidencia[5] !== undefined) tokens.push({ tipo: 'bold', texto: coincidencia[6] });
+    else if (coincidencia[7] !== undefined) tokens.push({ tipo: 'italic', texto: coincidencia[8] });
+    else if (coincidencia[9] !== undefined) tokens.push({ tipo: 'italic', texto: coincidencia[10] });
+    else if (coincidencia[11] !== undefined) tokens.push({ tipo: 'code', texto: coincidencia[12] });
+    else if (coincidencia[13] !== undefined) tokens.push({ tipo: 'link', texto: coincidencia[14], url: coincidencia[15] });
+    ultimoIndice = re.lastIndex;
+  }
+  if (ultimoIndice < texto.length) tokens.push({ tipo: 'text', texto: texto.slice(ultimoIndice) });
+  return tokens;
+}
+
+/* ------------------------------- Exportar a Word ------------------------------- */
+async function exportWord(nombreArchivo) {
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, ExternalHyperlink,
+          Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
+
+  const bloques = parseMarkdownBlocks(estado.ultimoResultadoMarkdown);
+  const nivelesEncabezado = {
+    1: HeadingLevel.HEADING_1, 2: HeadingLevel.HEADING_2, 3: HeadingLevel.HEADING_3,
+    4: HeadingLevel.HEADING_4, 5: HeadingLevel.HEADING_5, 6: HeadingLevel.HEADING_6
+  };
+
+  function construirHijosDeTexto(texto) {
+    const tokens = tokenizeInline(texto);
+    return tokens.map(token => {
+      if (token.tipo === 'link') {
+        return new ExternalHyperlink({ link: token.url, children: [new TextRun({ text: token.texto, color: '2E6DA4', underline: {} })] });
+      }
+      const opciones = { text: token.texto };
+      if (token.tipo === 'bold') opciones.bold = true;
+      if (token.tipo === 'italic') opciones.italics = true;
+      if (token.tipo === 'boldItalic') { opciones.bold = true; opciones.italics = true; }
+      if (token.tipo === 'code') { opciones.font = 'Consolas'; opciones.shading = { fill: 'EAF3FB' }; }
+      return new TextRun(opciones);
+    });
+  }
+
+  function construirHijosDeCita(texto) {
+    const tokens = tokenizeInline(texto);
+    return tokens.map(token => {
+      if (token.tipo === 'link') {
+        return new ExternalHyperlink({ link: token.url, children: [new TextRun({ text: token.texto, color: '2E6DA4', underline: {}, italics: true })] });
+      }
+      const opciones = { text: token.texto, italics: true, color: '57708A' };
+      if (token.tipo === 'bold' || token.tipo === 'boldItalic') opciones.bold = true;
+      if (token.tipo === 'code') { opciones.font = 'Consolas'; opciones.shading = { fill: 'EAF3FB' }; }
+      return new TextRun(opciones);
+    });
+  }
+
+  const parrafosDocx = [];
+  bloques.forEach(bloque => {
+    if (bloque.tipo === 'heading') {
+      parrafosDocx.push(new Paragraph({ heading: nivelesEncabezado[bloque.nivel] || HeadingLevel.HEADING_4, children: construirHijosDeTexto(bloque.texto), spacing: { before: 240, after: 120 } }));
+    } else if (bloque.tipo === 'paragraph') {
+      parrafosDocx.push(new Paragraph({ children: construirHijosDeTexto(bloque.texto), spacing: { after: 160 } }));
+    } else if (bloque.tipo === 'ul') {
+      bloque.items.forEach(item => parrafosDocx.push(new Paragraph({ bullet: { level: 0 }, children: construirHijosDeTexto(item), spacing: { after: 80 } })));
+    } else if (bloque.tipo === 'ol') {
+      bloque.items.forEach(item => parrafosDocx.push(new Paragraph({ numbering: { reference: 'lista-numerada-consultar', level: 0 }, children: construirHijosDeTexto(item), spacing: { after: 80 } })));
+    } else if (bloque.tipo === 'blockquote') {
+      parrafosDocx.push(new Paragraph({
+        indent: { left: 480 },
+        border: { left: { color: '2E6DA4', space: 8, style: BorderStyle.SINGLE, size: 12 } },
+        children: construirHijosDeCita(bloque.texto),
+        spacing: { after: 160 }
+      }));
+    } else if (bloque.tipo === 'code') {
+      bloque.texto.split('\n').forEach(linea => {
+        parrafosDocx.push(new Paragraph({ children: [new TextRun({ text: linea || ' ', font: 'Consolas', size: 20 })], shading: { fill: 'F2F6FA' }, spacing: { after: 0 } }));
+      });
+      parrafosDocx.push(new Paragraph({ text: '', spacing: { after: 160 } }));
+    } else if (bloque.tipo === 'hr') {
+      parrafosDocx.push(new Paragraph({ border: { bottom: { color: 'D8E6F1', space: 1, style: BorderStyle.SINGLE, size: 6 } }, spacing: { after: 200 } }));
+    } else if (bloque.tipo === 'table') {
+      const filaCabecera = new TableRow({ children: bloque.cabecera.map(texto => new TableCell({ shading: { fill: 'EAF3FB' }, children: [new Paragraph({ children: [new TextRun({ text: texto, bold: true })] })] })) });
+      const filasDatos = bloque.filas.map(fila => new TableRow({ children: fila.map(texto => new TableCell({ children: [new Paragraph({ children: construirHijosDeTexto(texto) })] })) }));
+      parrafosDocx.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [filaCabecera, ...filasDatos] }));
+      parrafosDocx.push(new Paragraph({ text: '', spacing: { after: 160 } }));
+    }
+  });
+
+  const documento = new Document({
+    creator: "ConSultar",
+    title: 'Respuesta generada por ' + "ConSultar",
+    description: "ConSultar mejora automáticamente tu consulta y la envía a la IA de Anthropic para obtener una respuesta completa en Markdown.",
+    styles: { default: { document: { run: { font: "Calibri", size: 22 } } } },
+    numbering: { config: [{ reference: 'lista-numerada-consultar', levels: [{ level: 0, format: 'decimal', text: '%1.', alignment: 'start' }] }] },
+    sections: [{ properties: {}, children: parrafosDocx }]
+  });
+
+  const blob = await Packer.toBlob(documento);
+  descargarBlob(blob, nombreArchivo);
+}
+
+/* ------------------------------- Exportar a PDF -------------------------------- */
+// Caracteres que las fuentes estándar de jsPDF (codificación WinAnsi) no
+// representan correctamente —flechas, comillas tipográficas, guiones
+// largos, viñetas sueltas, etc.— y que de otro modo aparecerían como
+// símbolos ilegibles en el PDF. Se sustituyen por su equivalente ASCII
+// más cercano SOLO en la exportación a PDF; el Markdown en pantalla y las
+// exportaciones a Markdown/Word no se ven afectados.
+const SUSTITUCIONES_CARACTERES_PDF = {
+  '\u2192': '->', '\u2190': '<-', '\u2194': '<->',
+  '\u21D2': '=>', '\u21D0': '<=',
+  '\u2018': "'", '\u2019': "'", '\u201C': '"', '\u201D': '"',
+  '\u2013': '-', '\u2014': '-',
+  '\u2026': '...',
+  '\u2022': '-',
+  '\u2713': 'OK', '\u2714': 'OK', '\u2717': 'x', '\u2718': 'x'
+};
+
+function normalizarTextoParaPdf(texto) {
+  let resultado = String(texto || '');
+  for (const [buscado, reemplazo] of Object.entries(SUSTITUCIONES_CARACTERES_PDF)) {
+    resultado = resultado.split(buscado).join(reemplazo);
+  }
+  return resultado;
+}
+
+function exportPDF(nombreArchivo) {
+  const { jsPDF } = window.jspdf;
+  const fuenteBase = "helvetica";
+  const doc = new jsPDF({ unit: 'pt', format: "a4" });
+
+  const margen = 50;
+  const anchoUtil = doc.internal.pageSize.getWidth() - margen * 2;
+  const alturaPagina = doc.internal.pageSize.getHeight();
+  let y = margen;
+
+  function saltoDePaginaSiNecesario(alturaNecesaria) {
+    if (y + alturaNecesaria > alturaPagina - margen) { doc.addPage(); y = margen; }
+  }
+
+  function aplicarEstiloFuente(estiloToken) {
+    if (estiloToken === 'code') doc.setFont('courier', 'normal');
+    else if (estiloToken === 'boldItalic') doc.setFont(fuenteBase, 'bolditalic');
+    else if (estiloToken === 'bold') doc.setFont(fuenteBase, 'bold');
+    else if (estiloToken === 'italic') doc.setFont(fuenteBase, 'italic');
+    else doc.setFont(fuenteBase, 'normal');
+  }
+
+  function dibujarParrafoConEstilo(tokens, x, anchoDisponible, tamanoFuente, interlineado, colorTexto) {
+    doc.setFontSize(tamanoFuente);
+    let cursorX = x;
+    const alturaLinea = tamanoFuente * (interlineado || 1.4);
+
+    tokens.forEach(token => {
+      const palabras = token.texto.split(/(\s+)/).filter(p => p !== '');
+      palabras.forEach(palabra => {
+        aplicarEstiloFuente(token.tipo);
+        doc.setFontSize(tamanoFuente);
+        if (token.tipo === 'link') doc.setTextColor(46, 109, 164);
+        else if (colorTexto) doc.setTextColor.apply(doc, colorTexto);
+        else doc.setTextColor(30, 42, 56);
+
+        const anchoPalabra = doc.getTextWidth(palabra);
+        if (palabra.trim() !== '' && cursorX + anchoPalabra > x + anchoDisponible) {
+          cursorX = x; y += alturaLinea; saltoDePaginaSiNecesario(alturaLinea);
+        }
+        if (palabra.trim() === '') { cursorX += anchoPalabra; return; }
+
+        if (token.tipo === 'link') doc.textWithLink(palabra, cursorX, y, { url: token.url });
+        else doc.text(palabra, cursorX, y);
+        cursorX += anchoPalabra;
+      });
+    });
+    doc.setTextColor(30, 42, 56);
+    y += alturaLinea;
+    return y;
+  }
+
+  function dibujarBloqueTexto(texto, opciones) {
+    opciones = opciones || {};
+    const x = margen + (opciones.indent || 0);
+    const anchoDisponible = anchoUtil - (opciones.indent || 0);
+    saltoDePaginaSiNecesario((opciones.tamanoFuente || 11) * 1.4);
+    dibujarParrafoConEstilo(tokenizeInline(texto), x, anchoDisponible, opciones.tamanoFuente || 11, 1.45, opciones.color);
+  }
+
+  const bloques = parseMarkdownBlocks(normalizarTextoParaPdf(estado.ultimoResultadoMarkdown));
+  const tamanosEncabezado = { 1: 19, 2: 16, 3: 14, 4: 12.5, 5: 11.5, 6: 11 };
+
+  doc.setProperties({ title: 'Respuesta generada por ' + "ConSultar" });
+
+  bloques.forEach(bloque => {
+    if (bloque.tipo === 'heading') {
+      y += 10; saltoDePaginaSiNecesario(30);
+      doc.setFont(fuenteBase, 'bold');
+      dibujarBloqueTexto(bloque.texto, { tamanoFuente: tamanosEncabezado[bloque.nivel] || 12 });
+      y += 4;
+    } else if (bloque.tipo === 'paragraph') {
+      dibujarBloqueTexto(bloque.texto, { tamanoFuente: 11 }); y += 6;
+    } else if (bloque.tipo === 'ul') {
+      bloque.items.forEach(item => {
+        saltoDePaginaSiNecesario(16);
+        doc.setFont(fuenteBase, 'normal'); doc.setFontSize(11); doc.setTextColor(30, 42, 56);
+        doc.text('•', margen + 4, y);
+        dibujarBloqueTexto(item, { tamanoFuente: 11, indent: 18 });
+      });
+      y += 4;
+    } else if (bloque.tipo === 'ol') {
+      bloque.items.forEach((item, indice) => {
+        saltoDePaginaSiNecesario(16);
+        doc.setFont(fuenteBase, 'normal'); doc.setFontSize(11); doc.setTextColor(30, 42, 56);
+        doc.text(String(indice + 1) + '.', margen, y);
+        dibujarBloqueTexto(item, { tamanoFuente: 11, indent: 18 });
+      });
+      y += 4;
+    } else if (bloque.tipo === 'blockquote') {
+      saltoDePaginaSiNecesario(20);
+      const yInicial = y;
+      dibujarBloqueTexto(bloque.texto, { tamanoFuente: 11, indent: 16, color: [87, 112, 138] });
+      doc.setDrawColor(46, 109, 164); doc.setLineWidth(2);
+      doc.line(margen + 4, yInicial - 12, margen + 4, y - 8);
+      y += 6;
+    } else if (bloque.tipo === 'code') {
+      // Cada línea se ajusta al ancho disponible (splitTextToSize) para que
+      // ninguna línea larga de código se salga de la página, y el bloque se
+      // reparte entre páginas si no cabe entero en el espacio restante.
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(9.5);
+      const anchoInteriorCodigo = anchoUtil - 16;
+      const lineasEnvueltas = [];
+      bloque.texto.split('\n').forEach(linea => {
+        const partes = doc.splitTextToSize(linea === '' ? ' ' : linea, anchoInteriorCodigo);
+        partes.forEach(parte => lineasEnvueltas.push(parte));
+      });
+
+      const alturaLineaCodigo = 13;
+      let indiceLinea = 0;
+      while (indiceLinea < lineasEnvueltas.length) {
+        if (y + alturaLineaCodigo + 12 > alturaPagina - margen) {
+          doc.addPage();
+          y = margen;
+        }
+        const espacioDisponible = (alturaPagina - margen) - y - 12;
+        const lineasPorTanda = Math.max(1, Math.floor(espacioDisponible / alturaLineaCodigo));
+        const tanda = lineasEnvueltas.slice(indiceLinea, indiceLinea + lineasPorTanda);
+
+        const alturaBloque = tanda.length * alturaLineaCodigo + 12;
+        doc.setFillColor(242, 246, 250);
+        doc.rect(margen, y - 10, anchoUtil, alturaBloque, 'F');
+        let yCodigo = y + 4;
+        tanda.forEach(linea => {
+          doc.setFont('courier', 'normal');
+          doc.setFontSize(9.5);
+          doc.setTextColor(30, 42, 56);
+          doc.text(linea, margen + 8, yCodigo);
+          yCodigo += alturaLineaCodigo;
+        });
+        y = yCodigo + 6;
+        indiceLinea += tanda.length;
+      }
+    } else if (bloque.tipo === 'hr') {
+      saltoDePaginaSiNecesario(16);
+      doc.setDrawColor(216, 230, 241);
+      doc.line(margen, y, margen + anchoUtil, y);
+      y += 16;
+    } else if (bloque.tipo === 'table') {
+      const columnas = bloque.cabecera.length || 1;
+      const anchoColumna = anchoUtil / columnas;
+      doc.setFontSize(10);
+
+      function alturaFila(fila) {
+        let maxLineas = 1;
+        fila.forEach(celda => { const lns = doc.splitTextToSize(String(celda), anchoColumna - 12); maxLineas = Math.max(maxLineas, lns.length); });
+        return maxLineas * 13 + 10;
+      }
+      function dibujarFila(fila, esCabecera) {
+        const alto = alturaFila(fila);
+        saltoDePaginaSiNecesario(alto);
+        if (esCabecera) { doc.setFillColor(234, 243, 251); doc.rect(margen, y - 10, anchoUtil, alto, 'F'); }
+        doc.setDrawColor(216, 230, 241);
+        doc.rect(margen, y - 10, anchoUtil, alto);
+        fila.forEach((celda, indiceColumna) => {
+          const xCelda = margen + indiceColumna * anchoColumna;
+          doc.rect(xCelda, y - 10, anchoColumna, alto);
+          doc.setFont(fuenteBase, esCabecera ? 'bold' : 'normal');
+          doc.setTextColor(30, 42, 56);
+          const lineas = doc.splitTextToSize(String(celda), anchoColumna - 12);
+          doc.text(lineas, xCelda + 6, y + 2);
+        });
+        y += alto;
+      }
+      dibujarFila(bloque.cabecera, true);
+      bloque.filas.forEach(fila => dibujarFila(fila, false));
+      y += 10;
+    }
+  });
+
+  doc.save(nombreArchivo);
+}
+
+
+/* ------------------------------------------------------------------ *
+ * 9. ARRANQUE
+ * ------------------------------------------------------------------ */
+document.addEventListener('DOMContentLoaded', initializeApp);</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Dependencias de Python
+# -----------------------
+# Instalar con: pip install -r requirements.txt
+
+opencv-python-headless>=4.8.0    # Heurística de detección de diagramas (bordes, líneas, colores)
+Pillow>=10.0.0                    # Lectura y gestión de imágenes
+numpy>=1.24.0                     # Cálculos de las métricas de imagen
+python-docx>=1.1.0                # Extracción de descripciones/alt-text del .docx original
+
+# Opcional — solo necesario si quieres conversión real a Mermaid asistida por IA
+# (en lugar del esqueleto heurístico aproximado). Requiere además configurar la
+# variable de entorno ANTHROPIC_API_KEY con una clave válida.
+anthropic>=0.40.0
+
+# -----------------------------------------------------------------------
+# IMPORTANTE: Dependencia EXTERNA (no es un paquete de Python, no se
+# instala con pip). Debe estar disponible en el PATH del sistema:
+#
+#   Pandoc
+#   https://pandoc.org/installing.html
+#   Windows : winget install --id JohnMacFarlane.Pandoc
+#   macOS   : brew install pandoc
+#   Linux   : sudo apt install pandoc
+# -----------------------------------------------------------------------

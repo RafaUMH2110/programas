@@ -1,0 +1,6 @@
+# Copia este archivo como ".env" (en el mismo directorio que el script)
+# y sustituye el valor por tu clave real de la API de Anthropic.
+#
+# IMPORTANTE: nunca subas tu archivo ".env" real a un repositorio Git.
+
+ANTHROPIC_API_KEY=sk-ant-tu-clave-aqui

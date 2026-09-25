@@ -1,0 +1,265 @@
+# =============================================================================
+# config.yaml — Configuración del generador de la aplicación web ConSultar
+# =============================================================================
+#
+# Este archivo es la ÚNICA fuente de configuración del generador: todo lo que
+# puede cambiar en la aplicación web resultante (textos, modelos, colores,
+# prompts, exportación, librerías externas, etc.) se controla desde aquí, sin
+# tocar ningún archivo de código Python ni de plantillas.
+#
+# Formato: YAML. También se admite JSON (usa la extensión .json y la misma
+# estructura de claves) si prefieres no depender de PyYAML.
+#
+# Tras editar este archivo, genera la aplicación con:
+#     python main.py
+# o valida los cambios sin generar nada con:
+#     python main.py --validate
+#
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1. APLICACIÓN — metadatos generales y ubicación del archivo generado
+# -----------------------------------------------------------------------------
+aplicacion:
+  nombre: "ConSultar"
+  descripcion: >-
+    ConSultar mejora automáticamente tu consulta y la envía a la IA de
+    Anthropic para obtener una respuesta completa en Markdown.
+  idioma_html: "es"          # valor del atributo <html lang="...">
+  idioma_interfaz: "es-ES"   # solo informativo/documental; los textos reales están en la sección "ui"
+  archivo_salida: "consultar.html"
+  directorio_salida: "output"
+
+
+# -----------------------------------------------------------------------------
+# 2. MODELOS — catálogo de modelos de IA que aparecerán en el desplegable
+#    "Elegir Modelo" de la aplicación generada
+# -----------------------------------------------------------------------------
+modelos:
+  modelo_por_defecto: "claude-sonnet-4-5-20250929"   # debe coincidir con el "id" de uno de los modelos de abajo
+  disponibles:
+    - id: "claude-sonnet-5"
+      nombre: "Claude Sonnet 5"
+      max_output_tokens: 128000
+      notas: >-
+        Modelo de gama media más reciente. Mejor equilibrio entre velocidad,
+        coste e inteligencia.
+    - id: "claude-haiku-4-5-20251001"
+      nombre: "Claude Haiku 4.5"
+      max_output_tokens: 64000
+      notas: >-
+        Modelo más rápido y económico, con inteligencia cercana a la de los
+        modelos de gama alta.
+    - id: "claude-sonnet-4-5-20250929"
+      nombre: "Claude Sonnet 4.5"
+      max_output_tokens: 64000
+      notas: "Generación anterior a Sonnet 5."
+    - id: "claude-opus-4-5-20251101"
+      nombre: "Claude Opus 4.5"
+      max_output_tokens: 64000
+      notas: "Modelo de gama alta."
+    - id: "claude-opus-4-1-20250805"
+      nombre: "Claude Opus 4.1 (legacy)"
+      max_output_tokens: 32000
+      notas: "Modelo legacy, mantenido por compatibilidad."
+
+
+# -----------------------------------------------------------------------------
+# 3. API — conexión con el proveedor de IA
+# -----------------------------------------------------------------------------
+# IMPORTANTE (seguridad): aquí NUNCA se configura una clave de API real. La
+# aplicación generada la solicita a la persona que la usa mediante un campo
+# de contraseña en el propio navegador, y la envía directamente al
+# "endpoint" indicado abajo. `api_key_env` es solo documental: indica el
+# nombre de variable de entorno que usarías si en el futuro añades un
+# backend/proxy propio (ver la sección "Seguridad" del README).
+# -----------------------------------------------------------------------------
+api:
+  proveedor: "anthropic"
+  endpoint: "https://api.anthropic.com/v1/messages"
+  version_api: "2023-06-01"
+  api_key_env: "ANTHROPIC_API_KEY"
+  timeout_segundos: 60      # tiempo máximo de espera de cada llamada a la API
+  reintentos: 2             # reintentos automáticos ante errores 429/5xx o de red
+
+
+# -----------------------------------------------------------------------------
+# 4. PROMPTS — las dos consultas del flujo de dos pasos
+# -----------------------------------------------------------------------------
+# `system` y `user` son PLANTILLAS de texto. Puedes usar los siguientes
+# marcadores de posición, que la aplicación generada sustituye en el
+# navegador en el momento de realizar cada consulta (no al generar el
+# archivo):
+#
+#   {{consulta}}            → el texto que la persona escribe en "Consulta"
+#   {{consulta_mejorada}}   → el resultado del primer paso (mejora del prompt)
+#   {{rol_usuario}}         → el texto que la persona escribe en "Rol del usuario"
+#   {{modelo}}              → el nombre visible del modelo elegido en pantalla
+#
+# `modelo` (opcional): si se indica el id de un modelo, esa consulta se
+# realiza siempre con ese modelo, sin importar el que se elija en la
+# interfaz. Déjalo vacío (null) para usar el modelo seleccionado en pantalla.
+# -----------------------------------------------------------------------------
+prompts:
+  mejora:
+    system: >-
+      You are an expert prompt engineer. Your only task is to take the
+      user's original prompt (which may be written in any language) and
+      rewrite it as a single, clear, detailed and unambiguous prompt in
+      English, ready to be sent to an AI assistant. Do not answer the
+      prompt yourself. Do not add explanations, preambles or comments.
+      Reply with ONLY the improved prompt text, nothing else.
+    user: "{{consulta}}"
+    max_tokens: 1024
+    temperature: 0.3
+    modelo: null
+
+  final:
+    system: "{{rol_usuario}}"
+    user: "{{consulta_mejorada}}"
+    max_tokens: 4096          # también es el valor por defecto del campo "Número de tokens" en pantalla
+    temperature: null
+    modelo: null
+
+
+# -----------------------------------------------------------------------------
+# 5. UI — todos los textos visibles de la interfaz generada
+# -----------------------------------------------------------------------------
+ui:
+  titulo: "ConSultar"
+  subtitulo: "Mejora y ejecuta tus consultas mediante IA"
+  descripcion_cabecera: >-
+    Mejora automáticamente tu consulta y obtén una respuesta completa,
+    generada en dos pasos con la IA de Anthropic.
+
+  titulo_seccion_config: "Configuración"
+  subtitulo_seccion_config: "Elige el modelo y ajusta los parámetros de la consulta."
+  titulo_seccion_consulta: "Consulta"
+  subtitulo_seccion_consulta: "Tu consulta se mejora primero automáticamente y después se envía como pregunta final."
+  titulo_seccion_resultado: "Resultado"
+  subtitulo_seccion_resultado: "La respuesta final aparecerá aquí, en formato Markdown."
+
+  etiqueta_api_key: "Clave de API de Anthropic"
+  ayuda_api_key: >-
+    Tu clave se usa únicamente en este navegador para conectar directamente
+    con la API de Anthropic. No se guarda ni se envía a ningún otro servidor.
+  aviso_seguridad: >-
+    La llamada se realiza directamente desde tu navegador a la API de
+    Anthropic. Por motivos de seguridad, esta forma de uso solo es
+    recomendable para pruebas personales, nunca para una aplicación pública
+    con usuarios distintos de ti.
+
+  etiqueta_modelo: "Elegir Modelo"
+  etiqueta_tokens: "Número de tokens"
+
+  etiqueta_exportar_checkbox: "Exportar resultado"
+  etiqueta_formato_exportacion: "Formato de exportación"
+  etiqueta_nombre_archivo: "Nombre del archivo"
+  ayuda_nombre_archivo: "La extensión se añade automáticamente según el formato elegido."
+
+  etiqueta_rol: "Rol del usuario"
+  ayuda_rol: "Instrucciones de sistema para la respuesta final (puedes editarlas libremente)."
+  valor_por_defecto_rol: >-
+    Eres un asistente de inteligencia artificial experto y minucioso.
+    Responde a la solicitud del usuario de manera completa y estructurada,
+    utilizando formato Markdown (encabezados, listas, bloques de código,
+    etc.) cuando sea apropiado.
+
+  etiqueta_consulta: "Consulta"
+  placeholder_consulta: "Escribe aquí tu consulta, con el detalle que necesites…"
+  ayuda_consulta: "Este texto se mejora automáticamente antes de enviarse como pregunta final."
+
+  boton_consultar: "Consultar"
+  boton_mostrar_clave: "Mostrar"
+  boton_ocultar_clave: "Ocultar"
+  boton_exportar: "Exportar fichero"
+
+  placeholder_resultado: "Todavía no se ha generado ninguna respuesta. Escribe tu consulta y pulsa «Consultar»."
+
+  mensaje_paso_1: "Paso 1 de 2: mejorando tu consulta…"
+  mensaje_paso_2: "Paso 2 de 2: generando la respuesta final…"
+  mensaje_exito: "Respuesta generada correctamente."
+  mensaje_export_sin_resultado: "Genera primero una respuesta para poder exportarla."
+  mensaje_export_checkbox_desactivado: "Activa «Exportar resultado» en la configuración para habilitar la exportación."
+  mensaje_export_generado: "Archivo «{{nombre_archivo}}» descargado correctamente."
+
+  texto_pie_pagina: "Rafael Puerto"
+  correo_pie_pagina: "r.puerto@umh.es"
+
+
+# -----------------------------------------------------------------------------
+# 6. VISIBILIDAD — mostrar u ocultar controles opcionales
+# -----------------------------------------------------------------------------
+visibilidad:
+  mostrar_aviso_seguridad: true   # el recuadro de aviso junto al campo de clave de API
+  mostrar_exportacion: true       # la casilla "Exportar resultado" y todo lo relacionado
+
+
+# -----------------------------------------------------------------------------
+# 7. TEMA — apariencia visual de la aplicación generada
+# -----------------------------------------------------------------------------
+# Los colores deben ser hexadecimales de 6 dígitos ("#RRGGBB"). El tema por
+# defecto sigue el requisito original: predominio de azules muy claros,
+# blanco y gris claro, con acentos azules sutiles.
+# -----------------------------------------------------------------------------
+tema:
+  color_primario: "#2E6DA4"
+  color_primario_hover: "#24567F"
+  color_secundario: "#EAF3FB"     # paneles y superficies alternativas (antes "surface-alt")
+  color_fondo: "#F4F9FC"
+  color_texto: "#1E2A38"
+  color_texto_tenue: "#57708A"
+  color_borde: "#D8E6F1"
+  color_acento: "#DCEBF7"         # halo de foco, fondos "soft" de botones secundarios, etc.
+  familia_tipografica: "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
+  familia_monoespaciada: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+  radio_borde: "14px"
+  sombra: "0 1px 2px rgba(30, 64, 102, 0.06), 0 8px 24px rgba(30, 64, 102, 0.05)"
+  ancho_maximo: "980px"
+
+
+# -----------------------------------------------------------------------------
+# 8. EXPORTS — exportación del resultado a Markdown / Word / PDF
+# -----------------------------------------------------------------------------
+exports:
+  markdown:
+    activo: true
+  word:
+    activo: true
+  pdf:
+    activo: true
+
+  formato_por_defecto: "markdown"      # debe ser uno de: markdown, word, pdf — y estar "activo"
+  nombre_archivo_por_defecto: "resultado"
+
+  pdf_tamano_pagina: "a4"              # a4 | letter | legal
+  pdf_margen_pt: 50                    # margen en puntos (72 pt = 1 pulgada)
+  pdf_fuente: "helvetica"              # helvetica | times | courier (fuentes estándar de jsPDF)
+
+  word_fuente: "Calibri"
+  word_tamano_fuente_pt: 11
+
+
+# -----------------------------------------------------------------------------
+# 9. LIBRERÍAS — dependencias JavaScript cargadas desde CDN
+# -----------------------------------------------------------------------------
+# `markdown` y `sanitizador` son OBLIGATORIAS (activa: true siempre): la
+# primera muestra el resultado, y la segunda sanea ese HTML antes de
+# insertarlo en la página (evita vulnerabilidades XSS). `docx` solo hace
+# falta si `exports.word.activo` es true, y `jspdf` solo si
+# `exports.pdf.activo` es true.
+# -----------------------------------------------------------------------------
+librerias:
+  markdown:
+    activa: true
+    url: "https://cdn.jsdelivr.net/npm/marked/marked.min.js"
+  sanitizador:
+    activa: true
+    url: "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js"
+  docx:
+    activa: true
+    url: "https://cdn.jsdelivr.net/npm/docx@9.0.3/build/index.umd.js"
+  jspdf:
+    activa: true
+    url: "https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.0/jspdf.umd.min.js"

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="{{ config.aplicacion.idioma_html | e }}">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{ config.ui.titulo | e }} — {{ config.ui.subtitulo | e }}</title>
+<meta name="description" content="{{ config.aplicacion.descripcion | e }}" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232E6DA4'/%3E%3Cpath d='M9 20 L16 9 L23 20' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='24' r='1.6' fill='white'/%3E%3C/svg%3E" />
+
+{# =====================================================================
+   DEPENDENCIAS EXTERNAS — cada una se incluye solo si está activa en
+   config.yaml (sección "librerias"). markdown y sanitizador son siempre
+   obligatorias (lo exige validators.py); docx y jspdf solo hacen falta si
+   los formatos de exportación correspondientes están activos.
+   ===================================================================== #}
+{% if config.librerias.markdown.activa %}
+<script src="{{ config.librerias.markdown.url }}"></script>
+{% endif %}
+{% if config.librerias.sanitizador.activa %}
+<script src="{{ config.librerias.sanitizador.url }}"></script>
+{% endif %}
+{% if config.librerias.jspdf.activa %}
+<script src="{{ config.librerias.jspdf.url }}"></script>
+{% endif %}
+{% if config.librerias.docx.activa %}
+<script src="{{ config.librerias.docx.url }}"></script>
+{% endif %}
+
+<style>
+{% include "styles.css.j2" %}
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Saltar al contenido principal</a>
+
+<header class="app-header">
+  <div class="app-header-inner">
+    <svg class="app-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="48" height="48" rx="13" fill="{{ config.tema.color_primario }}"/>
+      <path d="M13 30 L24 14 L35 30" stroke="#FFFFFF" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="24" cy="36" r="2.3" fill="#FFFFFF"/>
+    </svg>
+    <div class="app-header-text">
+      <h1>{{ config.ui.titulo | e }}</h1>
+      <p>{{ config.ui.descripcion_cabecera | e }}</p>
+    </div>
+  </div>
+</header>
+
+<div class="app-shell" id="main-content">
+
+  <!-- ============================== CONFIGURACIÓN ============================== -->
+  <section class="card" aria-labelledby="config-titulo">
+    <h2 id="config-titulo">{{ config.ui.titulo_seccion_config | e }}</h2>
+    <p class="card-subtitle">{{ config.ui.subtitulo_seccion_config | e }}</p>
+
+    <div class="field api-key-field">
+      <label for="api-key-input">{{ config.ui.etiqueta_api_key | e }}</label>
+      <input type="password" id="api-key-input" name="api-key" autocomplete="off"
+             placeholder="sk-ant-..." aria-describedby="api-key-hint" />
+      <button type="button" class="toggle-visibility-btn" id="toggle-api-key-btn"
+              aria-pressed="false" aria-controls="api-key-input">{{ config.ui.boton_mostrar_clave | e }}</button>
+      <span class="hint" id="api-key-hint">{{ config.ui.ayuda_api_key | e }}</span>
+{% if config.visibilidad.mostrar_aviso_seguridad %}
+      <div class="notice" role="note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>{{ config.ui.aviso_seguridad | e }}</span>
+      </div>
+{% endif %}
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="modelo-select">{{ config.ui.etiqueta_modelo | e }}</label>
+        <select id="modelo-select" name="modelo"></select>
+        <span class="hint" id="modelo-hint"></span>
+      </div>
+
+      <div class="field">
+        <label for="tokens-input">{{ config.ui.etiqueta_tokens | e }}</label>
+        <input type="number" id="tokens-input" name="tokens" value="{{ config.prompts.final.max_tokens }}" min="1" step="1" aria-describedby="tokens-hint" />
+        <span class="hint" id="tokens-hint"></span>
+      </div>
+    </div>
+
+{% if config.visibilidad.mostrar_exportacion %}
+    <div class="field checkbox-field">
+      <input type="checkbox" id="exportar-checkbox" name="exportar" />
+      <label for="exportar-checkbox">{{ config.ui.etiqueta_exportar_checkbox | e }}</label>
+    </div>
+
+    <div class="export-subfields" id="export-subfields" hidden>
+      <div class="field-row">
+        <div class="field">
+          <label for="formato-select">{{ config.ui.etiqueta_formato_exportacion | e }}</label>
+          <select id="formato-select" name="formato">
+{% if config.exports.markdown.activo %}
+            <option value="markdown"{% if config.exports.formato_por_defecto == "markdown" %} selected{% endif %}>Markdown</option>
+{% endif %}
+{% if config.exports.word.activo %}
+            <option value="word"{% if config.exports.formato_por_defecto == "word" %} selected{% endif %}>Word</option>
+{% endif %}
+{% if config.exports.pdf.activo %}
+            <option value="pdf"{% if config.exports.formato_por_defecto == "pdf" %} selected{% endif %}>PDF</option>
+{% endif %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="nombre-archivo-input">{{ config.ui.etiqueta_nombre_archivo | e }}</label>
+          <input type="text" id="nombre-archivo-input" name="nombre-archivo" value="{{ config.exports.nombre_archivo_por_defecto | e }}" aria-describedby="nombre-archivo-hint" />
+          <span class="hint" id="nombre-archivo-hint">{{ config.ui.ayuda_nombre_archivo | e }}</span>
+        </div>
+      </div>
+    </div>
+{% endif %}
+  </section>
+
+  <!-- ================================ CONSULTA ================================= -->
+  <section class="card" aria-labelledby="consulta-titulo">
+    <h2 id="consulta-titulo">{{ config.ui.titulo_seccion_consulta | e }}</h2>
+    <p class="card-subtitle">{{ config.ui.subtitulo_seccion_consulta | e }}</p>
+
+    <div class="field">
+      <label for="rol-input">{{ config.ui.etiqueta_rol | e }}</label>
+      <textarea id="rol-input" name="rol" aria-describedby="rol-hint">{{ config.ui.valor_por_defecto_rol | e }}</textarea>
+      <span class="hint" id="rol-hint">{{ config.ui.ayuda_rol | e }}</span>
+    </div>
+
+    <div class="field">
+      <label for="consulta-input">{{ config.ui.etiqueta_consulta | e }}</label>
+      <textarea id="consulta-input" name="consulta" placeholder="{{ config.ui.placeholder_consulta | e }}" aria-describedby="consulta-hint"></textarea>
+      <span class="hint" id="consulta-hint">{{ config.ui.ayuda_consulta | e }}</span>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn btn-primary" id="consultar-btn">
+        <span id="consultar-btn-text">{{ config.ui.boton_consultar | e }}</span>
+      </button>
+    </div>
+
+    <div id="status-area" role="status" aria-live="polite"></div>
+  </section>
+
+  <!-- =============================== RESULTADO ================================= -->
+  <section class="card" aria-labelledby="resultado-titulo">
+    <h2 id="resultado-titulo">{{ config.ui.titulo_seccion_resultado | e }}</h2>
+    <p class="card-subtitle">{{ config.ui.subtitulo_seccion_resultado | e }}</p>
+
+    <p id="resultado-placeholder">{{ config.ui.placeholder_resultado | e }}</p>
+    <div id="resultado-contenido" hidden></div>
+
+{% if config.visibilidad.mostrar_exportacion %}
+    <div class="btn-row">
+      <button type="button" class="btn btn-secondary" id="exportar-btn" disabled>{{ config.ui.boton_exportar | e }}</button>
+    </div>
+    <span class="export-hint" id="exportar-hint">{{ config.ui.mensaje_export_checkbox_desactivado | e }}</span>
+{% endif %}
+  </section>
+
+</div>
+
+<footer class="app-footer">
+  <span>{{ config.ui.texto_pie_pagina | e }} (<a href="mailto:{{ config.ui.correo_pie_pagina | e }}">{{ config.ui.correo_pie_pagina | e }}</a>)</span>
+  <span id="fecha-modificacion-footer"></span>
+</footer>
+
+<script>
+{% include "app.js.j2" %}
+</script>
+</body>
+</html>

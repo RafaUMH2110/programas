@@ -1,0 +1,26 @@
+# Dependencias de Python
+# -----------------------
+# Instalar con: pip install -r requirements.txt
+
+python-docx>=1.1.0    # Post-procesado del .docx para reforzar el idioma es-ES
+Pillow>=10.0.0         # Medición de las imágenes PNG para ajustarlas al tamaño de página
+
+# -----------------------------------------------------------------------
+# IMPORTANTE: Dependencias EXTERNAS (no son paquetes de Python, no se
+# instalan con pip). Deben estar disponibles en el PATH del sistema:
+#
+#   1) Pandoc
+#      https://pandoc.org/installing.html
+#      Windows : winget install --id JohnMacFarlane.Pandoc
+#      macOS   : brew install pandoc
+#      Linux   : sudo apt install pandoc
+#
+#   2) Mermaid CLI (comando `mmdc`) — requiere Node.js >= 16
+#      npm install -g @mermaid-js/mermaid-cli
+#      Verificar instalación: mmdc --version
+#
+# En entornos Docker/CI de Linux, Chromium (usado por Mermaid CLI vía
+# Puppeteer) puede fallar por restricciones del sandbox. En ese caso,
+# ejecuta el script con la opción --no-sandbox (CLI) o "sin_sandbox": true
+# (config.json de la versión VS Code).
+# -----------------------------------------------------------------------

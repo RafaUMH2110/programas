@@ -1,0 +1,14 @@
+# Dependencias necesarias para generate_presentation_vscode.py
+# y generate_presentation_cli.py
+#
+# Instalación:
+#   pip install -r requirements.txt
+
+python-pptx>=0.6.23
+python-docx>=1.1.0
+anthropic>=0.34.0
+
+# Opcional (solo para generate_presentation_vscode.py, permite cargar
+# ANTHROPIC_API_KEY desde un archivo .env en lugar de una variable de
+# entorno del sistema):
+python-dotenv>=1.0.0
