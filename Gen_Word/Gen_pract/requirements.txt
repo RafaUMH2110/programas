@@ -1,0 +1,7 @@
+anthropic>=0.40.0
+python-docx>=1.1.0
+
+# Optional: lets the script auto-load ANTHROPIC_API_KEY from a local .env
+# file instead of prompting for it every run. Safe to remove if you'd
+# rather always set the environment variable yourself.
+python-dotenv>=1.0.0

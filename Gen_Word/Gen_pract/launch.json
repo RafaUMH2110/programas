@@ -1,0 +1,36 @@
+{
+    // See: https://code.visualstudio.com/docs/python/debugging
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: docx_guide_generator (interactivo)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/docx_guide_generator.py",
+            // "integratedTerminal" (not "internalConsole"/Debug Console) is
+            // required because the script uses input()/getpass() to prompt
+            // for the file path, API key and model when run with no args.
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: docx_guide_generator (con argumentos)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/docx_guide_generator.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            // Prompts once, via VS Code's own input box, for the file to
+            // process — edit or remove this "args" entry to hard-code a
+            // path instead.
+            "args": ["${input:inputFilePath}"]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "inputFilePath",
+            "type": "promptString",
+            "description": "Ruta del cuaderno o documento de entrada (.ipynb, .md, .txt)"
+        }
+    ]
+}
